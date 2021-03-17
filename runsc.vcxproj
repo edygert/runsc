@@ -103,6 +103,8 @@
   <ItemGroup>
     <None Include="LICENSE" />
     <None Include="README.md" />
+    <None Include="runsc32.exe" />
+    <None Include="runsc64.exe" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

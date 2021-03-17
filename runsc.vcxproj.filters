@@ -26,5 +26,11 @@
     <None Include="LICENSE">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="runsc32.exe">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="runsc64.exe">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
