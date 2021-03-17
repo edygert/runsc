@@ -20,12 +20,12 @@ const DWORD MEGABYTE = 1024 * 1024;
 const char* shellcodefilename = "\\shellcode";
 
 const char* helpText = "\nUsage: runsc <offset> or runsc <offset> <filename of document to open for shellcode to find>\n\n"
-	"Shellcode must be in the current directory in a file named shellcode'.\n"
-	"The offset is required and must be the first parameter, but will often be 0.\n\n"
-	"The offset may be entered using decimal numbers or hex (prefixed by 0x)\n\n."
-	"Some shellcode looks for the next malware stage in the document in which\n\n"
-	"it is embedded. Supply the filename of that document as the third parameter"
-	"for that malware.\n\n"
+	"Shellcode must be in the current directory in a file named shellcode'.\n\n"
+	"The offset is required and must be the first parameter, but will often be 0.\n"
+	"The offset may be entered using decimal numbers or hex (prefixed by 0x).\n\n"
+	"Some shellcode looks for the next malware stage in the document in which\n"
+	"it is embedded. Supply the filename of that document as the third parameter\n"
+	"for that malware. This parameter is optional.\n\n"
 	"Run this program from the command line, after which you will need to\n"
 	"attach to it using the debugger. The address of the shellcode will be\n"
 	"printed on the screen. This is the address at which to set a breakpoint\n"
