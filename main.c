@@ -5,6 +5,7 @@
 // and additional error checks were added too.
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
@@ -18,11 +19,23 @@ const DWORD MEGABYTE = 1024 * 1024;
 
 const char* shellcodefilename = "\\shellcode";
 
+const char* helpText = "\nUsage: runsc <offset> or runsc <offset> <filename of document to open for shellcode to find>\n\n"
+	"Shellcode must be in the current directory in a file named shellcode'.\n"
+	"The offset is required and must be the first parameter, but will often be 0.\n\n"
+	"The offset may be entered using decimal numbers or hex (prefixed by 0x)\n\n."
+	"Some shellcode looks for the next malware stage in the document in which\n\n"
+	"it is embedded. Supply the filename of that document as the third parameter"
+	"for that malware.\n\n"
+	"Run this program from the command line, after which you will need to\n"
+	"attach to it using the debugger. The address of the shellcode will be\n"
+	"printed on the screen. This is the address at which to set a breakpoint\n"
+	"in the debugger."
+	"\n\n";
+
 int main(int argc, char** argv)
 {
-	if (argc == 2 && strcmp(argv[1], "-h") == 0) {
-		printf("\nUsage: runsc or runsc <filename of document to open for shellcode to find>\n\n");
-		printf("Shellcode must be in the current directory in a file named shellcode'\n");
+	if (argc < 2 || (argc >= 2 && strcmp(argv[1], "-h") == 0)) {
+		printf(helpText);
 		return 1;
 	}
 
@@ -40,7 +53,6 @@ int main(int argc, char** argv)
 
 	memset(fullPath, 0, sizeof(fullPath));
 
-	// Get the current working directory and print it
 	DWORD dwResult = GetCurrentDirectoryA(sizeof(fullPath), fullPath);
 	if (dwResult == 0) {
 		printf("[!] Error: GetCurrentDirectoryA failed\n");
@@ -74,6 +86,24 @@ int main(int argc, char** argv)
 	}
 	printf("[*] Size of shellcode is %u bytes\n\n", fsLow);
 
+	int radix = 10;
+	if (strchr(argv[1], 'x') || strchr(argv[1], 'X')) {
+		radix = 16;
+	}
+
+	DWORD offset = (DWORD)strtol(argv[1], NULL, radix);
+	if (offset >= fsLow || offset < 0) {
+		printf("[!] Error: Offset must be between 0 and the size of the shellcode.");
+		return 1;
+	}
+
+	// if strtol returned 0 but the user specified something other than 0, 0x0, 0X0, then
+	// the offset was invalid.
+	if (offset == 0 && (strcmp(argv[1], "0") != 0 || _stricmp(argv[1], "0x") != 0)) {
+		printf("[!] Error: Offset must be between 0 and the size of the shellcode.");
+		return 1;
+	}
+
 	// Allocate space for the shellcode (VirtualAlloc will zero the space)
 	char* scBuffer = (char*)VirtualAlloc(NULL, fsLow, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 	if (scBuffer == NULL) {
@@ -92,11 +122,11 @@ int main(int argc, char** argv)
 
 	printf("[*] Successfully read %u bytes into buffer!\n\n", fsLow);
 
-	if (argc == 2) {
-		HANDLE hDoc = CreateFileA(argv[1], GENERIC_READ, FILE_SHARE_READ, NULL,
+	if (argc == 3) {
+		HANDLE hDoc = CreateFileA(argv[2], GENERIC_READ, FILE_SHARE_READ, NULL,
 		   OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hDoc == INVALID_HANDLE_VALUE) {
-			printf("[!] Error: Could not open document: %s\n\n", argv[1]);
+			printf("[!] Error: Could not open document: %s\n\n", argv[2]);
 			return 1;
 		}
 		printf("[*] Doc file handle: %p\n\n", hDoc);
@@ -105,7 +135,7 @@ int main(int argc, char** argv)
 	// Create a suspended thread on the shellcode, adding the shellcode's location
 	// as an argument (in case it's needed)
 	DWORD threadID = 0;
-	HANDLE hThread = CreateThread(NULL, MEGABYTE, (LPTHREAD_START_ROUTINE)scBuffer, scBuffer, CREATE_SUSPENDED, &threadID);
+	HANDLE hThread = CreateThread(NULL, MEGABYTE, (LPTHREAD_START_ROUTINE)(scBuffer + offset), scBuffer + offset, CREATE_SUSPENDED, &threadID);
 	if (hThread == NULL) {
 		printf("[!] Could not create shellcode thread.\n");
 		return 1;
