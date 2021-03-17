@@ -106,6 +106,9 @@
     <None Include="runsc32.exe" />
     <None Include="runsc64.exe" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="getopt.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
