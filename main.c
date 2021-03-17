@@ -110,7 +110,7 @@ int main(int argc, char** argv)
 		printf("[!] Error: Failed to allocate memory for shellcode!\n\n");
 		return 1;
 	}
-	printf("[*] Shellcode buffer space of %u bytes allocated at address 0x%p\n\n", fsLow, scBuffer);
+	printf("[*] Shellcode buffer space of %u bytes allocated at address 0x%p\n\n", fsLow, scBuffer + offset);
 
 	DWORD bytesRead = 0;
 
