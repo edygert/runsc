@@ -50,7 +50,7 @@ int main(int argc, char** argv)
 	printf("[*] The current \"working\" directory is: %s\n\n", fullPath);
 
 	if (strlen(fullPath) + strlen(shellcodefilename) >= sizeof(fullPath)) {
-		printf("[!] Error: length of full path to shellcode file is >= %d\n", sizeof(fullPath));
+		printf("[!] Error: length of full path to shellcode file is >= %d\n", (unsigned int)sizeof(fullPath));
 		return 1;
 	}
 
