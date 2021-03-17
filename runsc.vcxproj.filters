@@ -19,4 +19,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="LICENSE">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>
