@@ -31,8 +31,7 @@ int main(int argc, char** argv)
 	WSADATA wsaData;
 	WSAStartup(MAKEWORD(2, 2), &wsaData);
 
-	BOOL bResult = IsUserAnAdmin();
-	if (bResult == FALSE) {
+	if (IsUserAnAdmin()) {
 		printf("[!] Warning: You may not be running with admin rights. It is recommended that you do so when analyzing shellcode :)\n\n");
 	}
 
