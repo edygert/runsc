@@ -6,9 +6,9 @@ version has been generally cleaned up and uses a single source file that can
 be compiled for either 32 or 64-bit. The ability to specify an offset at
 which the shellcode starts and specify a file to open were added.
 
-Usage: runsc <offset> or runsc <offset> <filename of document to open for shellcode to find>
+Usage: ```runsc [offset]``` or ```runsc [offset] [filename of document to open for shellcode to find]```
 
-Shellcode must be in the current directory in a file named shellcode'.
+Shellcode must be in the current directory in a file named 'shellcode'.
 
 The offset is required and must be the first parameter, but will often be 0.
 The offset may be entered using decimal numbers or hex (prefixed by 0x).
