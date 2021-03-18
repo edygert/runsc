@@ -2,10 +2,8 @@
 
 This code is based on the code from
 https://github.com/Kdr0x/Kd_Shellcode_Loader by Gary "kd" Contreras. This
-version has been generally cleaned up and uses a single source file that can
-be compiled for either 32 or 64-bit. The ability to specify an offset at
-which the shellcode starts and specify a file to open were added.
-
+version has been generally cleaned up and additional functionaly was added.
+This source file can be compiled for either 32 or 64-bit.
 
 Usage: ```runsc -f <shellcode file> [-o <offset>] [-d <document file>] [-n]```
 
@@ -25,4 +23,4 @@ and monitor it using behavior analysis tools, specify this option.
 
 Run this program from the command line, after which you will need to attach to it using
 the debugger (if -n is not specified). The address of the shellcode will be printed on
-the screen. This is the address at which to set a breakpoint in the debugger.
+the screen. Set a breakpoint on this address in the debugger.

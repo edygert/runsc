@@ -1,8 +1,7 @@
 // This code is based on the code from
 // https://github.com/Kdr0x/Kd_Shellcode_Loader by Gary "kd" Contreras. This
-// version has been generally cleaned up and uses a single source file that can
-// be compiled for either 32 or 64-bit. The ability to specify a file to open
-// and additional error checks were added too.
+// version has been generally cleaned up and additional functionaly was added.
+// This source file can be compiled for either 32 or 64-bit.
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,7 +31,7 @@ const char* helpText =
 "and monitor it using behavior analysis tools, specify this option.\n\n"
 "Run this program from the command line, after which you will need to attach to it using\n"
 "the debugger (if -n is not specified). The address of the shellcode will be printed on\n"
-"the screen. This is the address at which to set a breakpoint in the debugger."
+"the screen. Set a breakpoint on this address in the debugger."
 "\n\n";
 
 // This code is from https://stackoverflow.com/questions/8046097/how-to-check-if-a-process-has-the-administrative-rights
@@ -171,7 +170,6 @@ int main(int argc, char** argv)
 		printf("[!] Error: Failed to read data from shellcode file.\n\n");
 		return 1;
 	}
-	printf("[*] Shellcode begins at address 0x%p. Set breakpoint on that address.\n\n", scBuffer + offset);
 
 	if (docFile != NULL) {
 		HANDLE hDoc = CreateFileA(docFile, GENERIC_READ, FILE_SHARE_READ, NULL,
@@ -199,9 +197,16 @@ int main(int argc, char** argv)
 	}
 
 	if (!nopause) {
-		printf("[*] Thread ID %u (0x%X) was spawned to launch the shellcode; check it in the debugger.\n\n", threadID, threadID);
-		printf("[*] The thread was created in a suspended state. Set the breakpoint on the shellcode\n"
-			"address above and then press any key to resume the thread.\n\n");
+		printf("\n[*] What to do now.\n\n"
+			"Shellcode address: 0x%p.\n"
+			"Shellcode thread ID: %u (0x%X) (currently suspended)\n\n"
+			"1. Open the appropriate 32/64-bit debugger.\n"
+			"2. Attach to this process using the debugger. The process will stop at the attach breakpoint.\n"
+			"3. Set a breakpoint on the shellcode address shown above (e.g. bp <addr>).\n"
+			"4. Allow this program to continue executing in the debugger.\n"
+			"5. Switch back to this window and press any key to resume the shellcode thread.\n"
+			"6. Switch back to the debugger and the program will be stopped on the first shellcode instruction.\n",
+			scBuffer + offset, threadID, threadID);
 		getchar();
 		ResumeThread(hThread);
 	}
