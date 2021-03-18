@@ -1,8 +1,7 @@
 # runsc
 
 This code is based on the code from
-https://github.com/Kdr0x/Kd_Shellcode_Loader by Gary "kd" Contreras. This
-version has been generally cleaned up and additional functionaly was added.
+https://github.com/Kdr0x/Kd_Shellcode_Loader by Gary "kd" Contreras and contains additional functionality.
 This source file can be compiled for either 32 or 64-bit.
 
 Usage: ```runsc -f <shellcode file> [-o <offset>] [-d <document file>] [-n]```
