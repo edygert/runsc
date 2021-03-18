@@ -22,21 +22,19 @@ const DWORD MEGABYTE = 1024 * 1024;
 const char* shellcodefilename = "\\shellcode";
 
 const char* helpText =
-"\nUsage: runsc -f <shellcode file> -o <offset> -d <document file> -n\n\n"
-"\n-h: Display this help text.\n"
-"-f: The name of the file in which shellcode resides (required).\n"
-"-o: The offset at which the shellcode begins (optional, default is 0). The offset may\n"
-"be entered using decimal numbers or hex (prefixed by 0x).\n"
-"-d: The name of a document file that shellcode may need to be loaded in memory (optional).\n"
-"Some shellcode looks for the next malware stage in the document in which\n"
-"it is embedded. Supply the filename of that document for this parameter.\n"
-"-n: The default behavior is to run the shellcode as a suspended thread to give\n"
-"you time to attach to this process with a debugger. If you just want to run the\n"
-"shellcode and monitor it using behavior analysis tool, specify this option.\n\n"
-"Run this program from the command line, after which you will need to\n"
-"attach to it using the debugger (if -n is not specified). The address of the shellcode\n"
-"will be printed on the screen. This is the address at which to set a breakpoint\n"
-"in the debugger."
+"\nUsage: runsc -f <shellcode file> [-o <offset>] [-d <document file>] [-n]\n\n"
+"-h: Display this help text.\n\n"
+"-f: REQUIRED. The name of the file in which shellcode resides.\n\n"
+"-o: OPTIONAL: The offset at which the shellcode begins (default is 0). The offset may\n"
+"be entered using decimal numbers or hex (prefixed by 0x).\n\n"
+"-d: OPTIONAL: The name of a document file that shellcode may need to be loaded in memory.\n"
+"Some shellcode looks for the next malware stage in the document in which it is embedded.\n\n"
+"-n: OPTIONAL: The default behavior is to run the shellcode as a suspended thread to give\n"
+"you time to attach to this process with a debugger. If you just want to run the shellcode\n"
+"and monitor it using behavior analysis tools, specify this option.\n\n"
+"Run this program from the command line, after which you will need to attach to it using\n"
+"the debugger (if -n is not specified). The address of the shellcode will be printed on\n"
+"the screen. This is the address at which to set a breakpoint in the debugger."
 "\n\n";
 
 // This code is from https://stackoverflow.com/questions/8046097/how-to-check-if-a-process-has-the-administrative-rights
@@ -112,13 +110,16 @@ int main(int argc, char** argv)
 		}
 	}
 
+	printf("\n");
 	if (shellcodeFile == NULL) {
-		printf("[!] Error: shellcode file must be specified.");
+		printf("[!] Error: shellcode file must be specified.\n\n");
+		printf(helpText);
 		return 1;
 	}
 
 	if (!PathFileExistsA(shellcodeFile)) {
 		printf("[!] Error: Shellcode file not found: %s\n\n", shellcodeFile);
+		printf(helpText);
 		return 1;
 	}
 	printf("[*] Shellcode file: %s\n\n", shellcodeFile);
@@ -126,6 +127,7 @@ int main(int argc, char** argv)
 	if (docFile != NULL) {
 		if (!PathFileExistsA(docFile)) {
 			printf("[!] Error: Document file not found: %s\n\n", docFile);
+			printf(helpText);
 			return 1;
 		}
 		printf("[*] Document file: %s\n\n", docFile);
@@ -169,7 +171,7 @@ int main(int argc, char** argv)
 
 	SetFilePointer(hSCFile, 0, NULL, FILE_BEGIN);
 	if (!ReadFile(hSCFile, scBuffer, fsLow, &bytesRead, NULL)) {
-		printf("[!] Error: Failed to read data from shellcode file!\n\n");
+		printf("[!] Error: Failed to read data from shellcode file.\n\n");
 		return 1;
 	}
 
@@ -189,7 +191,7 @@ int main(int argc, char** argv)
 	// Also pass the address of the shellcode as a parameter because some
 	// shellcode expects its address to be on the stack.
 	DWORD threadID = 0;
-	char *shellcodeAddress = scBuffer + offset;
+	char* shellcodeAddress = scBuffer + offset;
 	DWORD creationFlags = CREATE_SUSPENDED;
 	if (nopause) {
 		creationFlags = 0;
@@ -201,7 +203,9 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	printf("[*] Thread ID %u (0x%X) was spawned to launch the shellcode; check it in the debugger!", threadID, threadID);
+	if (creationFlags != 0) {
+		printf("[*] Thread ID %u (0x%X) was spawned to launch the shellcode; check it in the debugger.\n", threadID, threadID);
+	}
 	WaitForSingleObject(hThread, INFINITE);
 
 	VirtualFree(scBuffer, 0, MEM_RELEASE);
