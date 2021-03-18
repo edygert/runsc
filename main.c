@@ -19,8 +19,6 @@
 
 const DWORD MEGABYTE = 1024 * 1024;
 
-const char* shellcodefilename = "\\shellcode";
-
 const char* helpText =
 "\nUsage: runsc -f <shellcode file> [-o <offset>] [-d <document file>] [-n]\n\n"
 "-h: Display this help text.\n\n"
@@ -87,7 +85,7 @@ int main(int argc, char** argv)
 
 			// if strtol returned 0 but the user specified something other than 0, 0x0, or 0X0, then
 			// the offset was invalid.
-			if (offset == 0 && (strcmp(optarg, "0") != 0 || _stricmp(optarg, "0x") != 0)) {
+			if (offset == 0 && !(strcmp(optarg, "0") == 0 || _stricmp(optarg, "0x") == 0)) {
 				printf("[!] Error: Offset must be between 0 and the size of the shellcode.");
 				return 1;
 			}
