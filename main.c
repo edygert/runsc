@@ -163,7 +163,6 @@ int main(int argc, char** argv)
 		printf("[!] Error: Failed to allocate memory for shellcode!\n\n");
 		return 1;
 	}
-	printf("[*] Shellcode buffer space of %u bytes allocated at address 0x%p\n\n", fsLow, scBuffer + offset);
 
 	DWORD bytesRead = 0;
 
@@ -172,8 +171,7 @@ int main(int argc, char** argv)
 		printf("[!] Error: Failed to read data from shellcode file.\n\n");
 		return 1;
 	}
-
-	printf("[*] Successfully read %u bytes into buffer!\n\n", fsLow);
+	printf("[*] Shellcode begins at address 0x%p. Set breakpoint on that address.\n\n", scBuffer + offset);
 
 	if (docFile != NULL) {
 		HANDLE hDoc = CreateFileA(docFile, GENERIC_READ, FILE_SHARE_READ, NULL,
@@ -189,20 +187,23 @@ int main(int argc, char** argv)
 	// Also pass the address of the shellcode as a parameter because some
 	// shellcode expects its address to be on the stack.
 	DWORD threadID = 0;
-	char* shellcodeAddress = scBuffer + offset;
 	DWORD creationFlags = CREATE_SUSPENDED;
 	if (nopause) {
 		creationFlags = 0;
 	}
 
-	HANDLE hThread = CreateThread(NULL, MEGABYTE, (LPTHREAD_START_ROUTINE)(scBuffer + offset), &shellcodeAddress, creationFlags, &threadID);
+	HANDLE hThread = CreateThread(NULL, MEGABYTE, (LPTHREAD_START_ROUTINE)(scBuffer+offset), scBuffer + offset, creationFlags, &threadID);
 	if (hThread == NULL) {
 		printf("[!] Could not create shellcode thread.\n");
 		return 1;
 	}
 
-	if (creationFlags != 0) {
-		printf("[*] Thread ID %u (0x%X) was spawned to launch the shellcode; check it in the debugger.\n", threadID, threadID);
+	if (!nopause) {
+		printf("[*] Thread ID %u (0x%X) was spawned to launch the shellcode; check it in the debugger.\n\n", threadID, threadID);
+		printf("[*] The thread was created in a suspended state. Set the breakpoint on the shellcode\n"
+			"address above and then press any key to resume the thread.\n\n");
+		getchar();
+		ResumeThread(hThread);
 	}
 	WaitForSingleObject(hThread, INFINITE);
 
