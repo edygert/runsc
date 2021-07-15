@@ -1,6 +1,6 @@
 // This code is based on the code from
 // https://github.com/Kdr0x/Kd_Shellcode_Loader by Gary "kd" Contreras. This
-// version has been generally cleaned up and additional functionaly was added.
+// version has been generally cleaned up and additional functionality was added.
 // This source file can be compiled for either 32 or 64-bit.
 
 #include <stdio.h>
@@ -17,10 +17,12 @@
 #pragma comment(lib, "Ws2_32.lib")
 
 const DWORD MEGABYTE = 1024 * 1024;
+const char *VERSION = "1.0.1";
 
 const char* helpText =
-"\nUsage: runsc -f <shellcode file> [-o <offset>] [-d <document file>] [-n]\n\n"
-"-h: Display this help text.\n\n"
+"\nUsage: runsc -f <shellcode file> [-o <offset>] [-d <document file>] [-n] [-a] [-h] [-v]\n\n"
+"-h: Display this help text and exit.\n\n"
+"-v: Display the version number and exits.\n\n"
 "-f: REQUIRED. The name of the file in which shellcode resides.\n\n"
 "-o: OPTIONAL: The offset at which the shellcode begins (default is 0). The offset may\n"
 "be entered using decimal numbers or hex (prefixed by 0x).\n\n"
@@ -28,10 +30,12 @@ const char* helpText =
 "Some shellcode looks for the next malware stage in the document in which it is embedded.\n\n"
 "-n: OPTIONAL: The default behavior is to run the shellcode as a suspended thread to give\n"
 "you time to attach to this process with a debugger. If you just want to run the shellcode\n"
-"and monitor it using behavior analysis tools, specify this option.\n\n"
-"Run this program from the command line, after which you will need to attach to it using\n"
-"the debugger (if -n is not specified). The address of the shellcode will be printed on\n"
-"the screen. Set a breakpoint on this address in the debugger."
+"and monitor it using behavior analysis tools, specify this option. If -n is not specified\n"
+"you will need to attach to runsc using the debugger. The address of the shellcode will be\n"
+"printed on the screen. Set a breakpoint on this address in the debugger.\n\n"
+"-a: OPTIONAL: Disable passing the address of the shellcode to the shellcode. This option\n"
+"will seldom if ever be used but may be useful if the shellcode has been written to detect\n"
+"runsc by checking for it's own address on the stack."
 "\n\n";
 
 // This code is from https://stackoverflow.com/questions/8046097/how-to-check-if-a-process-has-the-administrative-rights
@@ -52,6 +56,12 @@ static BOOL IsElevated()
 	return fRet;
 }
 
+void printUsage()
+{
+	printf("runsc version %s\n", VERSION);
+	printf(helpText);
+}
+
 int main(int argc, char** argv)
 {
 	char* shellcodeFile = NULL;
@@ -59,13 +69,22 @@ int main(int argc, char** argv)
 	DWORD offset = 0;
 	char* docFile = NULL;
 	BOOL nopause = FALSE;
+	BOOL passFirstArg = TRUE;
 
 	int c;
-	while ((c = getopt(argc, argv, "f:o:d:nh")) != -1) {
+	while ((c = getopt(argc, argv, "f:o:d:nhva")) != -1) {
 		switch (c) {
 		case 'h':
-			printf(helpText);
+			printUsage();
 			return 1;
+
+		case 'v':
+			printf("runsc version %s\n\n", VERSION);
+			return 1;
+
+		case 'a':
+			passFirstArg = FALSE;
+			break;
 
 		case 'f':
 			shellcodeFile = optarg;
@@ -99,7 +118,7 @@ int main(int argc, char** argv)
 			break;
 
 		case '?':
-			printf(helpText);
+			printUsage();
 			return 1;
 
 		default:
@@ -110,13 +129,13 @@ int main(int argc, char** argv)
 	printf("\n");
 	if (shellcodeFile == NULL) {
 		printf("[!] Error: shellcode file must be specified.\n\n");
-		printf(helpText);
+		printUsage();
 		return 1;
 	}
 
 	if (!PathFileExistsA(shellcodeFile)) {
 		printf("[!] Error: Shellcode file not found: %s\n\n", shellcodeFile);
-		printf(helpText);
+		printUsage();
 		return 1;
 	}
 	printf("[*] Shellcode file: %s\n\n", shellcodeFile);
@@ -124,7 +143,7 @@ int main(int argc, char** argv)
 	if (docFile != NULL) {
 		if (!PathFileExistsA(docFile)) {
 			printf("[!] Error: Document file not found: %s\n\n", docFile);
-			printf(helpText);
+			printUsage();
 			return 1;
 		}
 		printf("[*] Document file: %s\n\n", docFile);
@@ -190,7 +209,12 @@ int main(int argc, char** argv)
 		creationFlags = 0;
 	}
 
-	HANDLE hThread = CreateThread(NULL, MEGABYTE, (LPTHREAD_START_ROUTINE)(scBuffer+offset), scBuffer + offset, creationFlags, &threadID);
+	char *shellcodeAddress = scBuffer + offset;
+	if (!passFirstArg) {
+		shellcodeAddress = NULL;
+	}
+
+	HANDLE hThread = CreateThread(NULL, MEGABYTE, (LPTHREAD_START_ROUTINE)(shellcodeAddress), shellcodeAddress, creationFlags, &threadID);
 	if (hThread == NULL) {
 		printf("[!] Could not create shellcode thread.\n");
 		return 1;
@@ -201,11 +225,10 @@ int main(int argc, char** argv)
 			"Shellcode address: 0x%p.\n"
 			"Shellcode thread ID: %u (0x%X) (currently suspended)\n\n"
 			"1. Open the appropriate 32/64-bit debugger.\n"
-			"2. Attach to this process using the debugger. The process will stop at the attach breakpoint.\n"
+			"2. Attach to this process using the debugger.\n"
 			"3. Set a breakpoint on the shellcode address shown above (e.g. bp <addr>).\n"
-			"4. Allow this program to continue executing in the debugger.\n"
-			"5. Switch back to this window and press any key to resume the shellcode thread.\n"
-			"6. Switch back to the debugger and the program will be stopped on the first shellcode instruction.\n",
+			"4. Switch back to this window and press any key to resume the shellcode thread.\n"
+			"5. Switch back to the debugger and the program will be stopped on the first shellcode instruction.\n",
 			scBuffer + offset, threadID, threadID);
 		getchar();
 		ResumeThread(hThread);
