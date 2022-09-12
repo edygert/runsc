@@ -227,7 +227,7 @@ int main(int argc, char** argv)
 			"1. Open the appropriate 32/64-bit debugger.\n"
 			"2. Attach to this process using the debugger.\n"
 			"3. Set a breakpoint on the shellcode address shown above (e.g. bp <addr>).\n"
-			"4. Switch back to this window and press any key to resume the shellcode thread.\n"
+			"4. Switch back to this window and press the Enter key (may need to press it twice) to resume the shellcode thread.\n"
 			"5. Switch back to the debugger and the program will be stopped on the first shellcode instruction.\n",
 			scBuffer + offset, threadID, threadID);
 		getchar();
