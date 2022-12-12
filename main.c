@@ -210,11 +210,12 @@ int main(int argc, char** argv)
 	}
 
 	char *shellcodeAddress = scBuffer + offset;
+	char *shellcodeArg = shellcodeAddress;
 	if (!passFirstArg) {
-		shellcodeAddress = NULL;
+		shellcodeArg = NULL;
 	}
 
-	HANDLE hThread = CreateThread(NULL, MEGABYTE, (LPTHREAD_START_ROUTINE)(shellcodeAddress), shellcodeAddress, creationFlags, &threadID);
+	HANDLE hThread = CreateThread(NULL, MEGABYTE, (LPTHREAD_START_ROUTINE)(shellcodeAddress), shellcodeArg, creationFlags, &threadID);
 	if (hThread == NULL) {
 		printf("[!] Could not create shellcode thread.\n");
 		return 1;
@@ -227,9 +228,9 @@ int main(int argc, char** argv)
 			"1. Open the appropriate 32/64-bit debugger.\n"
 			"2. Attach to this process using the debugger.\n"
 			"3. Set a breakpoint on the shellcode address shown above (e.g. bp <addr>).\n"
-			"4. Switch back to this window and press any key to resume the shellcode thread.\n"
+			"4. Switch back to this window and press the Enter key (may need to press it twice) to resume the shellcode thread.\n"
 			"5. Switch back to the debugger and the program will be stopped on the first shellcode instruction.\n",
-			scBuffer + offset, threadID, threadID);
+			shellcodeAddress, threadID, threadID);
 		getchar();
 		ResumeThread(hThread);
 	}
